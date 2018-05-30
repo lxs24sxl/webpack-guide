@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'MyFont';
+  src: url('./font2.woff') format('waff');
+  font-weight: 600;
+  font-style: normal;
+}
+.hello {
+  color:red;
+  font-family: 'MyFont';
+  background: url('./loading.gif');
+}
