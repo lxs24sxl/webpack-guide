@@ -326,6 +326,7 @@ module.exports = {
 ##### 7.3 防止重复( prevent duplication )
 - 官网的文档存在缺陷，CommonsChunkPlugin 已经被webpack4x移除了，但是官网还放着 CommonsChunkPlugin,其实应当是在 配置文件 里面配置 optimization， 告知webpack需要提取 要求规格的文件 存储于 指定位置。
 
+- [medium上的有关移除CommonsChunkPlugin的文章]()
 ```javascript
 module.exports = {
   optimization: {
@@ -344,6 +345,32 @@ module.exports = {
         enforce: true
       }
     }
+  }
+}
+```
+
+
+#### 8. 懒加载
+- 懒加载或者是按需加载，是一种很好的优化网页或应用的方式。
+```javascript
+button.onclick = e => import(/* webpackChunkName: "print"*/ './print').then( module => {
+  let print = module.default;
+  print();
+});
+```
+- Vue懒加载: [Lazy Load in Vue using Webpack's code splitting](https://alexjoverm.github.io/2017/07/16/Lazy-load-in-Vue-using-Webpack-s-code-splitting/)
+
+
+#### 9. 缓存
+- 通过命中缓存，以减低网络流量，使网站加载速度更快，然而，如果我们在部署新版本时不更改资源的文件名，浏览器可能会认为它没有被更新，就会使用它的缓存版本。
+
+- 输出文件名管理，通过使用output.filename 进行文件名替换，可以确保浏览器获取到修改后的文件。[hash] 替换可以哟你咋文件名中包括一个构建相关( build-specific)的hash,但是更好的方式是使用 [ chunkhash ] 替换，在文件名中包括一个 chunk 相关( chunk-specific )的哈希
+
+```javascript
+module.exports = {
+  output: {
+    filename: '[name].[chunkhash].js',
+    path: path.resolve( __dirname, 'dist' )
   }
 }
 ```
