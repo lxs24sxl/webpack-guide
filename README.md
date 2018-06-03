@@ -191,8 +191,7 @@ package.json
 
 ##### 4.2. 使用 webpack-dev-middleware。 它是一个容器( warpper),它可用把webpack 处理后的文件传递给一个服务器( server )
 
-   [使用webpack-dev-middleware 和 webpack-hot-middleware 配置一个dev-server](https://blog.csdn.net/
-   xiaoxiao520c/article/details/77771217)
+[使用webpack-dev-middleware 和 webpack-hot-middleware 配置一个dev-server](https://blog.csdn.net/xiaoxiao520c/article/details/77771217)
 
 
 #### 5. tree-shaking
@@ -216,3 +215,135 @@ package.json
 - 压缩输出
   UglifyJsPlugin。 webpack4x 可用通过启用 mode: production 来开启压缩
 
+#### 6. 生产环境搭建
+
+- 生产环境 ( development ) 和开发环境 ( production ) 的构建目标差异很大。在开发环境中，我们需要具有强大的、具有实时重新加载 ( live reloading )或 热模块替换 ( hot module replacement )能力的 source map 和 localhost server。 而在生产环境中，我们的目标则转向于关注更小的 bundle，更轻量的source map，以及更优化的资源，以改善加载时间。由于要遵循逻辑分离，我们通常建议为每个环境编写彼此独立的webpack配置
+- npm install --save-dev webpack-merge
+
+webpack.common.js
+```javascript
+const path = require('path');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+module.exports = {
+  entry: {
+    app: './src/index.js'
+  },
+  plugins: [
+    new CleanWebpackPlugin(['dist']),
+    new HtmlWebpackPlugin({
+      title: 'Production'
+    })
+  ],
+  output: {
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  }
+};
+```
+
+webpack.dev.js
+```javascript
+const merge = require('webpack-merge');
+const common = require('./webpack.common.js');
++
+module.exports = merge(common, {
+  devtool: 'inline-source-map',
+  devServer: {
+    contentBase: './dist'
+  }
+});
+```
+webpack.prod.js
+```javascript
+const merge = require('webpack-merge');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const common = require('./webpack.common.js');
+
+module.exports = merge(common, {
+  plugins: [
+    new UglifyJSPlugin()
+  ]
+});
+```
+
+
+
+
+##### 6.1 NPM Scripts
+package.json
+```json
+{
+  "scripts": {
+    "start": "webpack-dev-server --open --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js"
+  }
+}
+```
+
+##### 6.2 webpack 鼓励开发者在生产环境中启用 source map，因为它们对调试源码(debug)和运行基准测试(benchmark tests)很有帮助。
+
+```javascript
+const merge = require('webpack-merge');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const common = require('./webpack.common.js');
+
+module.exports = merge(common, {
+  devtool: 'source-map',
+  plugins: [
+    new UglifyJSPlugin({
+      sourceMap: true
+    })
+  ]
+});
+```
+
+
+#### 7. 代码分离
+
+##### 7.1 在这里的话，官网有个坑
+
+三种常用的代码分离方法:
+- 入口起点: 使用 entry 配置手动地分离代码
+- 防止重复: 使用 ~~CommonsChunkPlugin~~ **optimization** 去重和分离 chunk。
+- 动态导入: 通过模块的内联函数调用来分离代码
+
+##### 7.2 入口起点
+```javascript
+module.exports = {
+  entry: {
+    index: './src/index.js',
+    another: './src/another-module.js'
+  },
+  output: {
+    filename: '[name].bundle.js',
+    path: path.resolve( __dirname, 'dist' )
+  }
+}
+```
+
+
+##### 7.3 防止重复( prevent duplication )
+- 官网的文档存在缺陷，CommonsChunkPlugin 已经被webpack4x移除了，但是官网还放着 CommonsChunkPlugin,其实应当是在 配置文件 里面配置 optimization， 告知webpack需要提取 要求规格的文件 存储于 指定位置。
+
+```javascript
+module.exports = {
+  optimization: {
+    cacheGroups: {
+      commons: {
+        name: 'commons',
+        priority: 10,
+        chunk: 'initial',
+        minChunks: 2
+      },
+      styles: {
+        name: 'styles',
+        test: /\.css$/,
+        chunks: 'all',
+        minChunks: 2,
+        enforce: true
+      }
+    }
+  }
+}
+```
