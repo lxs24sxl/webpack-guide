@@ -9,6 +9,18 @@ module.exports = {
     app: './src/index.js',
     another: './src/another-module.js'
   },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?&/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
+  },
+  resolve: {
+    extensions: [ '.tsx', '.ts', '.js' ]
+  },
   plugins: [
     new webpack.HashedModuleIdsPlugin(),
     new CleanWebpackPlugin(['dist']),

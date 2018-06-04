@@ -374,3 +374,73 @@ module.exports = {
   }
 }
 ```
+
+#### 10. 渐进式网络应用程序
+
+- 渐进式网络应用程序(Progressive Web Application - PWA)，是一种可以提供类似于原生应用程序(native app)体验的网络应用程序(web app)。PWA 可以用来做很多事。其中最重要的是，在离线(offline)时应用程序能够继续运行功能。这是通过使用名为 Service Workers 的网络技术来实现的。
+
+##### 10.1 添加 Workbox
+- npm install workbox-webpack-plugin --save-dev
+
+webpack.config.js
+```javascript
+const WorkboxPlugin = require('workbox-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new WorkboxPlugin.GenerateSW({
+      clientClaim: true,
+      skipWaiting: true
+    })
+  ]
+}
+```
+index.js
+```javascript
+if ( 'serviceWorker' in navigator ) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then( registration => {
+      console.log('SW registered: ', registration );
+    }).catch( registrationError => {
+      console.log('SW registration failed: ', registrationError );
+    });
+  });
+}
+```
+- 服务器已经停止了服务，此刻是 Service Worker 在提供服务。
+
+#### 11. TypeScript
+- TypeScript 是 JavaScript 的超集，为其增加类型系统，可以编译为普通的 JavaScript 代码。
+- npm install --save-dev typescript ts-loader
+
+tsconfig.json
+```json
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true
+  }
+}
+```
+
+```javascript
+module.exports = {
+  entry: './src/index.ts',
+  module: {
+    rules:[
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
+  },
+  resolve: {
+    extensions:[ '.tsx', '.ts', '.js' ]
+  }
+}
+```
